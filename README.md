@@ -1,2 +1,2 @@
-# E-CET
- E-CampusExamTutor
+# A.R.E.T
+ Amazing Random Exam Tutor
