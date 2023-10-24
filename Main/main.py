@@ -7,6 +7,7 @@
 #       changing colors of the background (?)
 #   Making the script an executive
 #   If subjects folders are not found show error dialog to try and find those folders
+#   set variable to change for background and foreground color, fonts and other variable
 # FIX:
 #   Find a way to refresh the window without having to close and open again the whole program
 
@@ -18,7 +19,6 @@ import json
 from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
-import tkinter
 from tkinter.font import Font
 from tkinter.simpledialog import askstring
 from PIL import *
@@ -34,7 +34,7 @@ class Subject(Frame):
 
     def __init__(self, master, name, question_folder, answer_folder):
         ##Initializing parameters
-        Frame.__init__(self, master)
+        Frame.__init__(self, master, bg="#3d1f82", highlightbackground='white', highlightthickness=1)
         self.sub_name = name
         self.question_folder = question_folder
         self.answer_folder = answer_folder
@@ -43,7 +43,7 @@ class Subject(Frame):
         self.create_index()
 
         ##Widgets creation
-        self.sub_lbl = Label(self, text=name)
+        self.sub_lbl = Label(self,text=name)
         self.index_lbl = Label(
             self,
             text="question " + str(self.curr_index) + "/" + str(len(self.quest_list)),
@@ -60,12 +60,14 @@ class Subject(Frame):
         self.index_backward_btn = Button(
             self, text="Previous", command=lambda: self.index_backward()
         )
-        self.sub_lbl.pack()
-        self.index_lbl.pack()
-        self.ask_question_btn.pack()
-        self.show_answer_btn.pack()
-        self.index_forward_btn.pack()
-        self.index_backward_btn.pack()
+        
+        self.sub_lbl.pack(side=LEFT, padx = 10, pady = 25, fill = NONE, expand = FALSE)
+        self.index_lbl.pack(side=LEFT, padx = 10, pady = 22,fill = NONE, expand = FALSE)
+        self.ask_question_btn.pack(side=LEFT, padx = 10, pady = 22,fill = NONE, expand = FALSE)
+        self.show_answer_btn.pack(side=LEFT, padx = 10, pady = 22,fill = NONE, expand = FALSE)
+        self.index_forward_btn.pack(side=LEFT, padx = 10, pady = 22,fill = NONE, expand = FALSE)
+        self.index_backward_btn.pack(side=LEFT, padx = 10, pady = 22,fill = NONE, expand = FALSE)
+
 
     ##Method to create the list containing the questions and answers
     def create_index(self):
@@ -90,7 +92,6 @@ class Subject(Frame):
         else:
             self.curr_index += 1
             self.update_index()
-            print(self.curr_index)
 
     ##Method that take the previous index in the list
     def index_backward(self):
@@ -99,7 +100,6 @@ class Subject(Frame):
         else:
             self.curr_index -= 1
             self.update_index()
-            print(self.curr_index)
 
     ##Method to update the index label
     def update_index(self):
@@ -114,20 +114,10 @@ class Subject(Frame):
             + "/"
             + self.quest_list[self.question_rand_list[(self.curr_index)]]
         )
-        print(
-            self.question_folder
-            + "/"
-            + self.quest_list[self.question_rand_list[self.curr_index]]
-        )
 
     ##Method to open an answer with a given index
     def show_answer(self):
         os.startfile(
-            self.answer_folder
-            + "/"
-            + self.ans_list[self.answer_rand_list[self.curr_index]]
-        )
-        print(
             self.answer_folder
             + "/"
             + self.ans_list[self.answer_rand_list[self.curr_index]]
@@ -142,13 +132,13 @@ class Subject_BTN(Frame):
         self.sub_name = name
         #setting up the frame of every subject in the frame
         
-        self.subject_custom_frame = Frame(master, width=500, height=600, bg="green", highlightbackground='white', highlightthickness=2)
-        self.lbl = Label(self.subject_custom_frame, text=name)
+        self.subject_btn_custom_frame = Frame(master, width=500, height=600, bg="green", highlightbackground='white', highlightthickness=2)
+        self.lbl = Label(self.subject_btn_custom_frame, text=name)
         self.btn_del = Button(
-            self.subject_custom_frame, text="DEL", command=lambda: self.__delete_Subject__()
+            self.subject_btn_custom_frame, text="DEL", command=lambda: self.__delete_Subject__()
         )
         
-        self.subject_custom_frame.pack(ipadx= 15, ipady= 10, padx= 10, pady= 10)
+        self.subject_btn_custom_frame.pack(ipadx= 15, ipady= 10, padx= 10, pady= 10)
         self.lbl.pack(pady=15, ipadx=20)
         self.btn_del.pack(pady=3, ipadx=20)
         
@@ -180,7 +170,7 @@ root.minsize(1100, 700)  # Minimum size of the window
 root.maxsize(1100, 700)  # Maximum size of the window
 root.resizable(FALSE, FALSE)
 root.geometry(
-    "1100x700+500+200"
+    "+500+200"
 )  # Position of the window in the screen and size of the window
 
 #Font
@@ -311,7 +301,121 @@ def add_to_subject_btn_list(frame_):
     #     listed.pack()
     
 
-def get_set_widgets_in_frame(frame_):
+def set_widgets_subject(frame_):
+    widgets_list = []
+    widgets_in_frame = frame_.winfo_children()
+    for widgets in widgets_in_frame:
+        widgets_list.append(widgets)
+    
+    #####For future update use an index to dynamically calculate the widget_list[index], taking the length of the subject_btn_list and the index should only have odd numbers####
+    match len(subject_list):
+        case 1:
+            widgets_list[0].grid(column = 0, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[0].grid_columnconfigure(0, weight = 1, uniform = 0)
+        case 2:
+            widgets_list[0].grid(column = 0, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[1].grid(column = 0, row = 1, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[0].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[1].grid_columnconfigure(1, weight = 1, uniform = 0)
+        case 3:
+            widgets_list[0].grid(column = 0, row = 0, padx = 30, pady = 10, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[1].grid(column = 0, row = 1, padx = 30, pady = 10, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[2].grid(column = 0, row = 2, padx = 30, pady = 10, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[0].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[1].grid_columnconfigure(1, weight = 1, uniform = 0)
+            widgets_list[2].grid_columnconfigure(2, weight = 1, uniform = 0)
+        case 4:
+            widgets_list[0].grid(column = 0, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[1].grid(column = 1, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[2].grid(column = 2, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[3].grid(column = 0, row = 1, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[0].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[1].grid_columnconfigure(1, weight = 1, uniform = 0)
+            widgets_list[2].grid_columnconfigure(2, weight = 1, uniform = 0)
+            widgets_list[3].grid_columnconfigure(0, weight = 1, uniform = 0)
+        case 5:
+            widgets_list[0].grid(column = 0, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[1].grid(column = 1, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[2].grid(column = 2, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[3].grid(column = 0, row = 1, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[4].grid(column = 1, row = 1, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[0].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[1].grid_columnconfigure(1, weight = 1, uniform = 0)
+            widgets_list[2].grid_columnconfigure(2, weight = 1, uniform = 0)
+            widgets_list[3].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[4].grid_columnconfigure(1, weight = 1, uniform = 0)
+        case 6:
+            widgets_list[0].grid(column = 0, row = 0, padx = 30, pady = 20, ipadx = 40, ipady = 10, columnspan = 1)
+            widgets_list[1].grid(column = 1, row = 0, padx = 30, pady = 20, ipadx = 40, ipady = 10, columnspan = 1)
+            widgets_list[2].grid(column = 2, row = 0, padx = 30, pady = 20, ipadx = 40, ipady = 10, columnspan = 1)
+            widgets_list[3].grid(column = 0, row = 1, padx = 30, pady = 20, ipadx = 40, ipady = 10, columnspan = 1)
+            widgets_list[4].grid(column = 1, row = 1, padx = 30, pady = 20, ipadx = 40, ipady = 10, columnspan = 1)
+            widgets_list[5].grid(column = 2, row = 1, padx = 30, pady = 20, ipadx = 40, ipady = 10, columnspan = 1)
+            widgets_list[0].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[1].grid_columnconfigure(1, weight = 1, uniform = 0)
+            widgets_list[2].grid_columnconfigure(2, weight = 1, uniform = 0)
+            widgets_list[3].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[4].grid_columnconfigure(1, weight = 1, uniform = 0)
+            widgets_list[5].grid_columnconfigure(2, weight = 1, uniform = 0)
+        case 7:
+            widgets_list[0].grid(column = 0, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[1].grid(column = 1, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[2].grid(column = 2, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[3].grid(column = 0, row = 1, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[4].grid(column = 1, row = 1, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[5].grid(column = 2, row = 1, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[6].grid(column = 0, row = 2, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[0].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[1].grid_columnconfigure(1, weight = 1, uniform = 0)
+            widgets_list[2].grid_columnconfigure(2, weight = 1, uniform = 0)
+            widgets_list[3].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[4].grid_columnconfigure(1, weight = 1, uniform = 0)
+            widgets_list[5].grid_columnconfigure(2, weight = 1, uniform = 0)
+            widgets_list[6].grid_columnconfigure(0, weight = 1, uniform = 0)
+        case 8:
+            widgets_list[0].grid(column = 0, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[1].grid(column = 1, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[2].grid(column = 2, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[3].grid(column = 0, row = 1, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[4].grid(column = 1, row = 1, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[5].grid(column = 2, row = 1, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[6].grid(column = 0, row = 2, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[7].grid(column = 1, row = 2, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[0].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[1].grid_columnconfigure(1, weight = 1, uniform = 0)
+            widgets_list[2].grid_columnconfigure(2, weight = 1, uniform = 0)
+            widgets_list[3].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[4].grid_columnconfigure(1, weight = 1, uniform = 0)
+            widgets_list[5].grid_columnconfigure(2, weight = 1, uniform = 0)
+            widgets_list[6].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[7].grid_columnconfigure(1, weight = 1, uniform = 0)
+        case 9:
+            widgets_list[0].grid(column = 0, row = 0, padx = 30, pady = 10, ipadx = 80, ipady = 10, columnspan = 5)
+            widgets_list[1].grid(column = 0, row = 1, padx = 30, pady = 10, ipadx = 80, ipady = 10, columnspan = 5)
+            widgets_list[2].grid(column = 0, row = 2, padx = 30, pady = 10, ipadx = 80, ipady = 10, columnspan = 5)
+            widgets_list[3].grid(column = 0, row = 3, padx = 30, pady = 10, ipadx = 80, ipady = 10, columnspan = 5)
+            widgets_list[4].grid(column = 0, row = 4, padx = 30, pady = 10, ipadx = 80, ipady = 10, columnspan = 5)
+            widgets_list[5].grid(column = 0, row = 5, padx = 30, pady = 10, ipadx = 80, ipady = 10, columnspan = 5)
+            widgets_list[6].grid(column = 0, row = 6, padx = 30, pady = 10, ipadx = 80, ipady = 10, columnspan = 5)
+            widgets_list[7].grid(column = 0, row = 7, padx = 30, pady = 10, ipadx = 80, ipady = 10, columnspan = 5)
+            widgets_list[8].grid(column = 0, row = 8, padx = 30, pady = 10, ipadx = 80, ipady = 10, columnspan = 5)
+            widgets_list[0].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[1].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[2].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[3].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[4].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[5].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[6].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[7].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[8].grid_columnconfigure(0, weight = 1, uniform = 0)
+
+        case _:
+            messagebox.showerror("Too Many Subjects", "Too many subjects have been added")
+    
+    subject_list.clear()
+
+
+def set_widgets_subject_btn(frame_):
     widgets_list = []
     widgets_in_frame = frame_.winfo_children()
     for widgets in widgets_in_frame:
@@ -321,24 +425,40 @@ def get_set_widgets_in_frame(frame_):
     match len(subject_btn_list):
         case 1:
             widgets_list[1].grid(column = 0, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[1].grid_columnconfigure(0, weight = 1, uniform = 0)
         case 2:
             widgets_list[1].grid(column = 0, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
             widgets_list[3].grid(column = 1, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[1].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[3].grid_columnconfigure(1, weight = 1, uniform = 0)
         case 3:
             widgets_list[1].grid(column = 0, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
             widgets_list[3].grid(column = 1, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
             widgets_list[5].grid(column = 2, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[1].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[3].grid_columnconfigure(1, weight = 1, uniform = 0)
+            widgets_list[5].grid_columnconfigure(2, weight = 1, uniform = 0)
+            
         case 4:
             widgets_list[1].grid(column = 0, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
             widgets_list[3].grid(column = 1, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
             widgets_list[5].grid(column = 2, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
             widgets_list[7].grid(column = 0, row = 1, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[1].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[3].grid_columnconfigure(1, weight = 1, uniform = 0)
+            widgets_list[5].grid_columnconfigure(2, weight = 1, uniform = 0)
+            widgets_list[7].grid_columnconfigure(0, weight = 1, uniform = 0)
         case 5:
             widgets_list[1].grid(column = 0, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
             widgets_list[3].grid(column = 1, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
             widgets_list[5].grid(column = 2, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
             widgets_list[7].grid(column = 0, row = 1, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
             widgets_list[9].grid(column = 1, row = 1, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[1].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[3].grid_columnconfigure(1, weight = 1, uniform = 0)
+            widgets_list[5].grid_columnconfigure(2, weight = 1, uniform = 0)
+            widgets_list[7].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[9].grid_columnconfigure(1, weight = 1, uniform = 0)
         case 6:
             widgets_list[1].grid(column = 0, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
             widgets_list[3].grid(column = 1, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
@@ -346,6 +466,12 @@ def get_set_widgets_in_frame(frame_):
             widgets_list[7].grid(column = 0, row = 1, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
             widgets_list[9].grid(column = 1, row = 1, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
             widgets_list[11].grid(column = 2, row = 1, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[1].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[3].grid_columnconfigure(1, weight = 1, uniform = 0)
+            widgets_list[5].grid_columnconfigure(2, weight = 1, uniform = 0)
+            widgets_list[7].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[9].grid_columnconfigure(1, weight = 1, uniform = 0)
+            widgets_list[11].grid_columnconfigure(2, weight = 1, uniform = 0)
         case 7:
             widgets_list[1].grid(column = 0, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
             widgets_list[3].grid(column = 1, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
@@ -354,6 +480,13 @@ def get_set_widgets_in_frame(frame_):
             widgets_list[9].grid(column = 1, row = 1, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
             widgets_list[11].grid(column = 2, row = 1, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
             widgets_list[13].grid(column = 0, row = 2, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[1].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[3].grid_columnconfigure(1, weight = 1, uniform = 0)
+            widgets_list[5].grid_columnconfigure(2, weight = 1, uniform = 0)
+            widgets_list[7].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[9].grid_columnconfigure(1, weight = 1, uniform = 0)
+            widgets_list[11].grid_columnconfigure(2, weight = 1, uniform = 0)
+            widgets_list[13].grid_columnconfigure(0, weight = 1, uniform = 0)
         case 8:
             widgets_list[1].grid(column = 0, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
             widgets_list[3].grid(column = 1, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
@@ -363,6 +496,14 @@ def get_set_widgets_in_frame(frame_):
             widgets_list[11].grid(column = 2, row = 1, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
             widgets_list[13].grid(column = 0, row = 2, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
             widgets_list[15].grid(column = 1, row = 2, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[1].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[3].grid_columnconfigure(1, weight = 1, uniform = 0)
+            widgets_list[5].grid_columnconfigure(2, weight = 1, uniform = 0)
+            widgets_list[7].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[9].grid_columnconfigure(1, weight = 1, uniform = 0)
+            widgets_list[11].grid_columnconfigure(2, weight = 1, uniform = 0)
+            widgets_list[13].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[15].grid_columnconfigure(1, weight = 1, uniform = 0)
         case 9:
             widgets_list[1].grid(column = 0, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
             widgets_list[3].grid(column = 1, row = 0, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
@@ -373,6 +514,15 @@ def get_set_widgets_in_frame(frame_):
             widgets_list[13].grid(column = 0, row = 2, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
             widgets_list[15].grid(column = 1, row = 2, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
             widgets_list[17].grid(column = 2, row = 2, padx = 30, pady = 50, ipadx = 80, ipady = 10, columnspan = 1)
+            widgets_list[1].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[3].grid_columnconfigure(1, weight = 1, uniform = 0)
+            widgets_list[5].grid_columnconfigure(2, weight = 1, uniform = 0)
+            widgets_list[7].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[9].grid_columnconfigure(1, weight = 1, uniform = 0)
+            widgets_list[11].grid_columnconfigure(2, weight = 1, uniform = 0)
+            widgets_list[13].grid_columnconfigure(0, weight = 1, uniform = 0)
+            widgets_list[15].grid_columnconfigure(1, weight = 1, uniform = 0)
+            widgets_list[17].grid_columnconfigure(2, weight = 1, uniform = 0)
         case _:
             messagebox.showerror("Too Many Subjects", "Too many subjects have been added")
     
@@ -385,9 +535,9 @@ def qa_page():
     )
     qa_frame.pack(side=RIGHT, expand=True, fill=BOTH)
     qa_frame.pack_propagate(FALSE)
-    qa_frame.configure(height=900, width=800)
 
     add_to_subject_list(qa_frame)
+    # set_widgets_subject(qa_frame)
 
 
 ##Define the subjects page
@@ -409,7 +559,7 @@ def subjects_page():
     )
     add_new_subjects_btn.grid(row = 4, column = 1, rowspan= 2, columnspan = 1, padx = 20, pady = 20, ipadx = 70, ipady = 10)
     
-    get_set_widgets_in_frame(subjects_frame)
+    set_widgets_subject_btn(subjects_frame)
 
 
 # Function to write a new subject into the configuration json file, fired after the button "ADD NEW" in the subject frame is pressed
