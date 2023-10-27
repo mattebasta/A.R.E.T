@@ -7,25 +7,29 @@
 #       Sidebar icons
 #       changing colors of the background (?)
 #   Making the script an executive
+#   Put value with relative screen resolution
 #   If subjects folders are not found show error dialog to try and find those folders
 #   set variable to change for background and foreground color, fonts and other variable
-#   New subject generation method: Once the user has given a pdf, it will be separated in all of it's pages and automatically set to be used.
+#   New subject generation method: Once the user has given a pdf, it will be separated in all of it's pages and automatically set to be used. >>
+#   >>(Add a default folder and when creating files make a folder to contain subfolders of question and answers)
 # FIX:
-#   Find a way to refresh the window without having to close and open again the whole program
 #   Keep the index somewhere instead of resetting it when changing the page (Put an alert when exiting the qa page)
-#   Put the subject object into a scrollable text and change the size
 
 
 import os
 import random
 import sys
 import json
+import shutil
 from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
+from tkinter.filedialog import askopenfilename
 from tkinter.font import Font
 from tkinter.simpledialog import askstring
 from PIL import *
+from pypdf import PdfWriter, PdfReader
+from pypdf.errors import PdfReadError
 
 
 ##Class Subject is used to create an object for every subjects is in the configuration json file, also it sets the button to ask question and show answers.
@@ -128,12 +132,6 @@ class Subject(Frame):
             + "/"
             + self.quest_list[self.question_rand_list[self.curr_index]]
         )
-        print(
-            self.question_folder
-            + "/"
-            + self.quest_list[self.question_rand_list[self.curr_index]]
-        )
-        print(self.rand_index)
 
     ##Method to open an answer with a given index
     def show_answer(self):
@@ -176,19 +174,54 @@ class Subject_BTN(Frame):
     def __delete_Subject__(self):
         self.lbl.pack_forget()
         self.btn_del.pack_forget()
-        self.subject_custom_frame.forget()
+        self.subject_btn_custom_frame.forget()
         with open("conf.json", "r") as config_to_modify:
             loading_modify = json.load(config_to_modify)
 
         for i, subs in enumerate(loading_modify["Saved subjects"]):
             if subs["Subject_Name"] == self.sub_name:
+                q_folder_to_delete = loading_modify["Saved subjects"][i]["question_folder"]
+                folder_to_delete = os.path.dirname(q_folder_to_delete)
+                shutil.rmtree(folder_to_delete)
                 del loading_modify["Saved subjects"][i]
 
         with open("conf.json", "w") as config_to_modify:
             json.dump(loading_modify, config_to_modify, indent=4, separators=(",", ":"))
 
+##Method to split pdf files chosen from the user and saved into the corresponding subject folder
+def file_configuration(file_q, file_a, sub_name, sub_q_dir, sub_a_dir):
+    input_q_pdf = PdfReader(open(file_q,"rb"))
+    input_a_pdf = PdfReader(open(file_a,"rb"))
+    absolute_q_path = os.path.abspath(sub_q_dir)
+    absolute_a_path = os.path.abspath(sub_a_dir)
+    
+    
+    for i in range(len(input_q_pdf.pages)):
+        out_q_files = PdfWriter()
+        out_q_files.add_page(input_q_pdf.pages[i])
+        output_q_path = os.path.join(absolute_q_path, sub_name + "_question_%s.pdf" % i)
+        with open(output_q_path, "wb") as out_q_stream:
+            out_q_files.write(out_q_stream)
+    
+    for j in range(len(input_a_pdf.pages)):
+        out_a_files = PdfWriter()
+        out_a_files.add_page(input_a_pdf.pages[j])
+        output_a_path = os.path.join(absolute_a_path, sub_name + "_answer_%s.pdf" % j)
+        with open(output_a_path, "wb") as out_a_stream:
+            out_a_files.write(out_a_stream)
+
+def default_sub_dir():
+    if os.path.isdir('Subjects'):
+        print("folder Subjects already exists")
+    else:
+        default_subject_folder_name = "Subjects"
+        default_subject_folder_parent_dir = "./"
+        default_subject_folder__path = os.path.join(default_subject_folder_parent_dir, default_subject_folder_name)
+        os.mkdir(default_subject_folder__path)
+
 
 ##Initialization of the tkinter window
+default_sub_dir()
 root = Tk()
 
 ##Related to GUI
@@ -198,7 +231,7 @@ root.title("A.R.E.T - Amazing Random Exam Tutor")
 root.minsize(1100, 700)  # Minimum size of the window
 root.maxsize(1100, 700)  # Maximum size of the window
 root.resizable(FALSE, FALSE)
-root.geometry("+500+200")  # Position of the window in the screen and size of the window
+root.geometry("+500+200")  # Position of the window in the screen and size of the window 
 
 # Font
 helv = Font(family="Helvetica", size=16)
@@ -219,43 +252,17 @@ check_file = os.path.isfile(config_File)
 # Check if config file already exist
 if check_file == False:
     print("no folder config found...\ncreating now....")
-    configFileAlert = messagebox.askquestion(
+    configFileAlert = messagebox.showinfo(
         title="Warning",
-        message="No folder config file found \n would you like to make a new one?",
-        icon="warning",
-    )
-    if configFileAlert == "yes":
-        subject_name = askstring("Subject's name", "Insert subject's name", parent=root)
-        if subject_name == None:
-            sys.exit()
-        else:
-            question_folder = askstring(
-                "Question Folder", "Insert question folder path", parent=root
-            )
-        if question_folder == None:
-            sys.exit()
-        else:
-            answer_folder = askstring(
-                "Answer Folder", "Insert answer folder path", parent=root
-            )
-            if answer_folder == None:
-                sys.exit()
-    else:
-        messagebox.showwarning(
-            title="Warning", message="Subject folder not found \n program will close"
-        )
-        sys.exit()
+        message="No folder config file found \n the system will create it now")
 
     # Preparing folder datas to write in the json file
     dict = {
         "Saved subjects": [
-            {
-                "Subject_Name": subject_name,
-                "question_folder": question_folder,
-                "answer_folder": answer_folder,
-            }
+
         ]
     }
+    
     valueToWrite = json.dumps(dict, indent=4, separators=(",", ":"))
     jsonConf = open("conf.json", "w")
     jsonConf.write(valueToWrite)
@@ -291,7 +298,6 @@ instructions_label.pack()
 ##Lists where the objects for the frames are saved and used also to show object in their respective frames
 subject_btn_list = []
 subject_list = []
-saved_sub = load_file["Saved subjects"]
 
 
 # Function that show the current section
@@ -308,7 +314,10 @@ def del_current():
 
 # Function to add subject object to the subject list, used to render the subject into the frame
 def add_to_subject_list(frame_):
-    for sub in saved_sub:
+    with open("conf.json", "r") as subject_file:
+        load_subject_file = json.load(subject_file)
+        
+    for sub in load_subject_file["Saved subjects"]:
         subject_list.append(
             Subject(
                 frame_,
@@ -322,12 +331,14 @@ def add_to_subject_list(frame_):
 
 
 def add_to_subject_btn_list(frame_):
-    for sub in saved_sub:
+    with open("conf.json", "r") as subject_btn_file:
+        load_subject_btn_file = json.load(subject_btn_file)
+        
+    for sub in load_subject_btn_file["Saved subjects"]:
         subject_btn_list.append(Subject_BTN(frame_, sub["Subject_Name"]))
 
-    # print(*subject_btn_list)
-    # for listed in subject_btn_list:
-    #     listed.pack()
+    for listed in subject_btn_list:
+        listed.pack()
 
 
 def set_widgets_subject(frame_):
@@ -335,205 +346,9 @@ def set_widgets_subject(frame_):
     widgets_in_frame = frame_.winfo_children()
     for widgets in widgets_in_frame:
         widgets_list.append(widgets)
-
-    #####For future update use an index to dynamically calculate the widget_list[index], taking the length of the subject_btn_list and the index should only have odd numbers####
-    match len(subject_list):
-        case 1:
-            widgets_list[0].grid(
-                column=0, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[0].grid_columnconfigure(0, weight=1, uniform=0)
-        case 2:
-            widgets_list[0].grid(
-                column=0, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[1].grid(
-                column=0, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[0].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[1].grid_columnconfigure(1, weight=1, uniform=0)
-        case 3:
-            widgets_list[0].grid(
-                column=0, row=0, padx=30, pady=10, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[1].grid(
-                column=0, row=1, padx=30, pady=10, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[2].grid(
-                column=0, row=2, padx=30, pady=10, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[0].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[1].grid_columnconfigure(1, weight=1, uniform=0)
-            widgets_list[2].grid_columnconfigure(2, weight=1, uniform=0)
-        case 4:
-            widgets_list[0].grid(
-                column=0, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[1].grid(
-                column=1, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[2].grid(
-                column=2, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[3].grid(
-                column=0, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[0].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[1].grid_columnconfigure(1, weight=1, uniform=0)
-            widgets_list[2].grid_columnconfigure(2, weight=1, uniform=0)
-            widgets_list[3].grid_columnconfigure(0, weight=1, uniform=0)
-        case 5:
-            widgets_list[0].grid(
-                column=0, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[1].grid(
-                column=1, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[2].grid(
-                column=2, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[3].grid(
-                column=0, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[4].grid(
-                column=1, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[0].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[1].grid_columnconfigure(1, weight=1, uniform=0)
-            widgets_list[2].grid_columnconfigure(2, weight=1, uniform=0)
-            widgets_list[3].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[4].grid_columnconfigure(1, weight=1, uniform=0)
-        case 6:
-            widgets_list[0].grid(
-                column=0, row=0, padx=30, pady=20, ipadx=40, ipady=10, columnspan=1
-            )
-            widgets_list[1].grid(
-                column=1, row=0, padx=30, pady=20, ipadx=40, ipady=10, columnspan=1
-            )
-            widgets_list[2].grid(
-                column=2, row=0, padx=30, pady=20, ipadx=40, ipady=10, columnspan=1
-            )
-            widgets_list[3].grid(
-                column=0, row=1, padx=30, pady=20, ipadx=40, ipady=10, columnspan=1
-            )
-            widgets_list[4].grid(
-                column=1, row=1, padx=30, pady=20, ipadx=40, ipady=10, columnspan=1
-            )
-            widgets_list[5].grid(
-                column=2, row=1, padx=30, pady=20, ipadx=40, ipady=10, columnspan=1
-            )
-            widgets_list[0].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[1].grid_columnconfigure(1, weight=1, uniform=0)
-            widgets_list[2].grid_columnconfigure(2, weight=1, uniform=0)
-            widgets_list[3].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[4].grid_columnconfigure(1, weight=1, uniform=0)
-            widgets_list[5].grid_columnconfigure(2, weight=1, uniform=0)
-        case 7:
-            widgets_list[0].grid(
-                column=0, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[1].grid(
-                column=1, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[2].grid(
-                column=2, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[3].grid(
-                column=0, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[4].grid(
-                column=1, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[5].grid(
-                column=2, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[6].grid(
-                column=0, row=2, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[0].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[1].grid_columnconfigure(1, weight=1, uniform=0)
-            widgets_list[2].grid_columnconfigure(2, weight=1, uniform=0)
-            widgets_list[3].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[4].grid_columnconfigure(1, weight=1, uniform=0)
-            widgets_list[5].grid_columnconfigure(2, weight=1, uniform=0)
-            widgets_list[6].grid_columnconfigure(0, weight=1, uniform=0)
-        case 8:
-            widgets_list[0].grid(
-                column=0, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[1].grid(
-                column=1, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[2].grid(
-                column=2, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[3].grid(
-                column=0, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[4].grid(
-                column=1, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[5].grid(
-                column=2, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[6].grid(
-                column=0, row=2, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[7].grid(
-                column=1, row=2, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[0].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[1].grid_columnconfigure(1, weight=1, uniform=0)
-            widgets_list[2].grid_columnconfigure(2, weight=1, uniform=0)
-            widgets_list[3].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[4].grid_columnconfigure(1, weight=1, uniform=0)
-            widgets_list[5].grid_columnconfigure(2, weight=1, uniform=0)
-            widgets_list[6].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[7].grid_columnconfigure(1, weight=1, uniform=0)
-        case 9:
-            widgets_list[0].grid(
-                column=0, row=0, padx=30, pady=10, ipadx=80, ipady=10, columnspan=5
-            )
-            widgets_list[1].grid(
-                column=0, row=1, padx=30, pady=10, ipadx=80, ipady=10, columnspan=5
-            )
-            widgets_list[2].grid(
-                column=0, row=2, padx=30, pady=10, ipadx=80, ipady=10, columnspan=5
-            )
-            widgets_list[3].grid(
-                column=0, row=3, padx=30, pady=10, ipadx=80, ipady=10, columnspan=5
-            )
-            widgets_list[4].grid(
-                column=0, row=4, padx=30, pady=10, ipadx=80, ipady=10, columnspan=5
-            )
-            widgets_list[5].grid(
-                column=0, row=5, padx=30, pady=10, ipadx=80, ipady=10, columnspan=5
-            )
-            widgets_list[6].grid(
-                column=0, row=6, padx=30, pady=10, ipadx=80, ipady=10, columnspan=5
-            )
-            widgets_list[7].grid(
-                column=0, row=7, padx=30, pady=10, ipadx=80, ipady=10, columnspan=5
-            )
-            widgets_list[8].grid(
-                column=0, row=8, padx=30, pady=10, ipadx=80, ipady=10, columnspan=5
-            )
-            widgets_list[0].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[1].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[2].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[3].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[4].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[5].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[6].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[7].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[8].grid_columnconfigure(0, weight=1, uniform=0)
-
-        case _:
-            messagebox.showerror(
-                "Too Many Subjects", "Too many subjects have been added"
-            )
-
-    subject_list.clear()
+    
+    for widgets_in_list in widgets_list:
+        widgets_in_list.pack()
 
 
 def set_widgets_subject_btn(frame_):
@@ -542,204 +357,7 @@ def set_widgets_subject_btn(frame_):
     for widgets in widgets_in_frame:
         widgets_list.append(widgets)
 
-    #####For future update use an index to dynamically calculate the widget_list[index], taking the length of the subject_btn_list and the index should only have odd numbers####
-    match len(subject_btn_list):
-        case 1:
-            widgets_list[1].grid(
-                column=0, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[1].grid_columnconfigure(0, weight=1, uniform=0)
-        case 2:
-            widgets_list[1].grid(
-                column=0, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[3].grid(
-                column=1, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[1].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[3].grid_columnconfigure(1, weight=1, uniform=0)
-        case 3:
-            widgets_list[1].grid(
-                column=0, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[3].grid(
-                column=1, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[5].grid(
-                column=2, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[1].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[3].grid_columnconfigure(1, weight=1, uniform=0)
-            widgets_list[5].grid_columnconfigure(2, weight=1, uniform=0)
-
-        case 4:
-            widgets_list[1].grid(
-                column=0, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[3].grid(
-                column=1, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[5].grid(
-                column=2, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[7].grid(
-                column=0, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[1].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[3].grid_columnconfigure(1, weight=1, uniform=0)
-            widgets_list[5].grid_columnconfigure(2, weight=1, uniform=0)
-            widgets_list[7].grid_columnconfigure(0, weight=1, uniform=0)
-        case 5:
-            widgets_list[1].grid(
-                column=0, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[3].grid(
-                column=1, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[5].grid(
-                column=2, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[7].grid(
-                column=0, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[9].grid(
-                column=1, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[1].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[3].grid_columnconfigure(1, weight=1, uniform=0)
-            widgets_list[5].grid_columnconfigure(2, weight=1, uniform=0)
-            widgets_list[7].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[9].grid_columnconfigure(1, weight=1, uniform=0)
-        case 6:
-            widgets_list[1].grid(
-                column=0, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[3].grid(
-                column=1, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[5].grid(
-                column=2, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[7].grid(
-                column=0, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[9].grid(
-                column=1, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[11].grid(
-                column=2, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[1].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[3].grid_columnconfigure(1, weight=1, uniform=0)
-            widgets_list[5].grid_columnconfigure(2, weight=1, uniform=0)
-            widgets_list[7].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[9].grid_columnconfigure(1, weight=1, uniform=0)
-            widgets_list[11].grid_columnconfigure(2, weight=1, uniform=0)
-        case 7:
-            widgets_list[1].grid(
-                column=0, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[3].grid(
-                column=1, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[5].grid(
-                column=2, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[7].grid(
-                column=0, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[9].grid(
-                column=1, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[11].grid(
-                column=2, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[13].grid(
-                column=0, row=2, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[1].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[3].grid_columnconfigure(1, weight=1, uniform=0)
-            widgets_list[5].grid_columnconfigure(2, weight=1, uniform=0)
-            widgets_list[7].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[9].grid_columnconfigure(1, weight=1, uniform=0)
-            widgets_list[11].grid_columnconfigure(2, weight=1, uniform=0)
-            widgets_list[13].grid_columnconfigure(0, weight=1, uniform=0)
-        case 8:
-            widgets_list[1].grid(
-                column=0, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[3].grid(
-                column=1, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[5].grid(
-                column=2, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[7].grid(
-                column=0, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[9].grid(
-                column=1, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[11].grid(
-                column=2, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[13].grid(
-                column=0, row=2, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[15].grid(
-                column=1, row=2, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[1].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[3].grid_columnconfigure(1, weight=1, uniform=0)
-            widgets_list[5].grid_columnconfigure(2, weight=1, uniform=0)
-            widgets_list[7].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[9].grid_columnconfigure(1, weight=1, uniform=0)
-            widgets_list[11].grid_columnconfigure(2, weight=1, uniform=0)
-            widgets_list[13].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[15].grid_columnconfigure(1, weight=1, uniform=0)
-        case 9:
-            widgets_list[1].grid(
-                column=0, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[3].grid(
-                column=1, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[5].grid(
-                column=2, row=0, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[7].grid(
-                column=0, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[9].grid(
-                column=1, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[11].grid(
-                column=2, row=1, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[13].grid(
-                column=0, row=2, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[15].grid(
-                column=1, row=2, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[17].grid(
-                column=2, row=2, padx=30, pady=50, ipadx=80, ipady=10, columnspan=1
-            )
-            widgets_list[1].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[3].grid_columnconfigure(1, weight=1, uniform=0)
-            widgets_list[5].grid_columnconfigure(2, weight=1, uniform=0)
-            widgets_list[7].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[9].grid_columnconfigure(1, weight=1, uniform=0)
-            widgets_list[11].grid_columnconfigure(2, weight=1, uniform=0)
-            widgets_list[13].grid_columnconfigure(0, weight=1, uniform=0)
-            widgets_list[15].grid_columnconfigure(1, weight=1, uniform=0)
-            widgets_list[17].grid_columnconfigure(2, weight=1, uniform=0)
-        case _:
-            messagebox.showerror(
-                "Too Many Subjects", "Too many subjects have been added"
-            )
-
-    subject_btn_list.clear()
+    # subject_btn_list.clear()
 
 
 ##Define the question & answers page
@@ -749,7 +367,6 @@ def qa_page():
     )
     qa_frame.pack(side=RIGHT, expand=True, fill=BOTH)
     qa_frame.pack_propagate(FALSE)
-
 
     add_to_subject_list(qa_frame)
     # set_widgets_subject(qa_frame)
@@ -763,8 +380,6 @@ def subjects_page():
     subjects_frame.pack(side=RIGHT, expand=True, fill=BOTH)
     subjects_frame.pack_propagate(FALSE)
 
-    # subject_canvas = Canvas(subjects_frame, height=700, width=1000, bg="white")
-    # subject_canvas.pack()
 
     add_to_subject_btn_list(subjects_frame)
 
@@ -772,30 +387,57 @@ def subjects_page():
     add_new_subjects_btn = Button(
         subjects_frame, text="ADD NEW", command=lambda: save_new_subject()
     )
-    add_new_subjects_btn.grid(
-        row=4, column=1, rowspan=2, columnspan=1, padx=20, pady=20, ipadx=70, ipady=10
-    )
+    add_new_subjects_btn.pack()
 
     set_widgets_subject_btn(subjects_frame)
 
 
 # Function to write a new subject into the configuration json file, fired after the button "ADD NEW" in the subject frame is pressed
 def save_new_subject():
+    filetype_ = [('pdf file', '*.pdf')]
     new_sub_name = askstring("Subject name", "Insert subject's name", parent=root)
     if new_sub_name is None:
         return
     else:
-        new_quest_folder = askstring(
-            "Subject quest folder", "Insert subject quest folder", parent=root
-        )
-        if new_quest_folder is None:
+        new_sub_q_file = askopenfilename(title="Question File", initialdir='/', filetypes=filetype_)
+        if new_sub_q_file == '':
+            messagebox.showerror(title="File Selection Error", message="No file selected \n Please select a question file")
             return
         else:
-            new_ans_folder = askstring(
-                "Subject answer folder", "Insert subject answer folder", parent=root
-            )
-            if new_ans_folder is None:
+            new_sub_a_file = askopenfilename(title="Answer File", initialdir = "/", filetypes=filetype_)
+            if new_sub_a_file == '':
+                messagebox.showerror(title="File Selection Error", message="No file selected \n Please select an answer file")
                 return
+            else:
+                pass
+        
+    
+    try:
+        PdfReader(new_sub_q_file)
+        PdfReader(new_sub_a_file)
+    except PdfReadError:
+        messagebox.showerror("File Error", message="File you have chosen is corrupted")
+        return
+    else:
+        if len(PdfReader(new_sub_q_file).pages) == len(PdfReader(new_sub_a_file).pages):
+            
+            #Subject parent directory init
+            sub_parent_dir_named = os.path.join("./Subjects", new_sub_name)
+            os.mkdir(sub_parent_dir_named)
+            #Question sub dir init
+            new_sub_q_dir = "question_folder_%s" % new_sub_name
+            new_sub_q_path = os.path.join(sub_parent_dir_named, new_sub_q_dir)
+            os.mkdir(new_sub_q_path)
+            #Answer sub dir init
+            new_sub_a_dir = "answer_folder_%s" % new_sub_name
+            new_sub_a_path = os.path.join(sub_parent_dir_named, new_sub_a_dir)
+            os.mkdir(new_sub_a_path)
+            
+            file_configuration(new_sub_q_file, new_sub_a_file, new_sub_name, new_sub_q_path, new_sub_a_path)
+        
+        else:
+            messagebox.showerror(title="File length", message="Choosen files have a differente length \n please choose files with the same number of pages")
+            return
 
     def write_json(new_data, filename="conf.json"):
         with open(filename, "r+") as file:
@@ -806,8 +448,8 @@ def save_new_subject():
 
     newdic = {
         "Subject_Name": new_sub_name,
-        "question_folder": new_quest_folder,
-        "answer_folder": new_ans_folder,
+        "question_folder": os.path.abspath(new_sub_q_path),
+        "answer_folder": os.path.abspath(new_sub_a_path),
     }
 
     write_json(newdic)
