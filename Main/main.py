@@ -24,6 +24,7 @@ from tkinter import messagebox
 from tkinter.filedialog import askopenfilename
 from tkinter.font import Font
 from tkinter.simpledialog import askstring
+import customtkinter
 from PIL import *
 from pypdf import PdfWriter, PdfReader
 from pypdf.errors import PdfReadError
@@ -222,7 +223,7 @@ def default_sub_dir():
 
 ##Initialization of the tkinter window
 default_sub_dir()
-root = Tk()
+root = customtkinter.CTk()
 
 ##Related to GUI
 
@@ -231,7 +232,7 @@ root.title("A.R.E.T - Amazing Random Exam Tutor")
 root.minsize(1100, 700)  # Minimum size of the window
 root.maxsize(1100, 700)  # Maximum size of the window
 root.resizable(FALSE, FALSE)
-root.geometry("+500+200")  # Position of the window in the screen and size of the window 
+root.geometry("500+200")  # Position of the window in the screen and size of the window 
 
 # Font
 helv = Font(family="Helvetica", size=16)
@@ -365,6 +366,9 @@ def qa_page():
     qa_frame.pack_propagate(FALSE)
 
     add_to_subject_list(qa_frame)
+    
+    
+    
     # set_widgets_subject(qa_frame)
 
 
