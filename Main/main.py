@@ -40,10 +40,7 @@ class Subject(Frame):
         ##Initializing parameters
         Frame.__init__(
             self,
-            master,
-            bg="#3d1f82",
-            highlightbackground="white",
-            highlightthickness=1,
+            master
         )
         self.sub_name = name
         self.question_folder = question_folder
@@ -53,27 +50,36 @@ class Subject(Frame):
         ##Call the create index method to make the list of questions and answers
         self.create_index()
         ##Widgets creation
-        self.sub_lbl = Label(self, text=name)
-        self.index_lbl = Label(
-            self,
+        self.subject_custom_frame = customtkinter.CTkFrame(
+            master,
+            width=500,
+            height=600,
+            border_color="white",
+            border_width= 1
+        )
+        self.sub_lbl = customtkinter.CTkLabel(self.subject_custom_frame, text=name, font = helv)
+        self.index_lbl = customtkinter.CTkLabel(
+            self.subject_custom_frame,
             text="question "
             + str(self.curr_index + 1)
             + "/"
             + str(len(self.quest_list)),
+            font = helv
         )
-        self.ask_question_btn = Button(
-            self, text="Question", command=lambda: self.ask_question()
+        self.ask_question_btn = customtkinter.CTkButton(
+            self.subject_custom_frame, text="Question", command=lambda: self.ask_question(), font = helv
         )
-        self.show_answer_btn = Button(
-            self, text="Answer", command=lambda: self.show_answer()
+        self.show_answer_btn = customtkinter.CTkButton(
+            self.subject_custom_frame, text="Answer", command=lambda: self.show_answer(), font = helv
         )
-        self.index_forward_btn = Button(
-            self, text="Next", command=lambda: self.index_forward()
+        self.index_forward_btn = customtkinter.CTkButton(
+            self.subject_custom_frame, text="Next", command=lambda: self.index_forward(), font = helv
         )
-        self.index_backward_btn = Button(
-            self, text="Previous", command=lambda: self.index_backward()
+        self.index_backward_btn = customtkinter.CTkButton(
+            self.subject_custom_frame, text="Previous", command=lambda: self.index_backward(), font = helv
         )
 
+        self.subject_custom_frame.pack(pady = 15, padx = 5, ipady = 10, ipadx = 15)
         self.sub_lbl.pack(side=LEFT, padx=10, pady=10, fill=NONE, expand=FALSE)
         self.index_lbl.pack(side=LEFT, padx=10, pady=10, fill=NONE, expand=FALSE)
         self.ask_question_btn.pack(side=LEFT, padx=10, pady=10, fill=NONE, expand=FALSE)
@@ -119,7 +125,7 @@ class Subject(Frame):
 
     ##Method to update the index label
     def update_index(self):
-        self.index_lbl.config(
+        self.index_lbl.configure(
             text="question "
             + str(self.curr_index + 1)
             + "/"
@@ -151,19 +157,18 @@ class Subject_BTN(Frame):
         self.sub_name = name
         # setting up the frame of every subject in the frame
 
-        self.subject_btn_custom_frame = Frame(
+        self.subject_btn_custom_frame = customtkinter.CTkFrame(
             master,
             width=500,
             height=600,
-            bg="green",
-            highlightbackground="white",
-            highlightthickness=2,
+            border_color="white",
+            border_width= 2
         )
-        self.lbl = Label(self.subject_btn_custom_frame, text=name)
-        self.btn_del = Button(
+        self.lbl = customtkinter.CTkLabel(self.subject_btn_custom_frame, text=name)
+        self.btn_del = customtkinter.CTkButton(
             self.subject_btn_custom_frame,
             text="DEL",
-            command=lambda: self.__delete_Subject__(),
+            command=lambda: self.__delete_Subject__()
         )
 
         self.subject_btn_custom_frame.pack(ipadx=15, ipady=10, padx=10, pady=10)
@@ -230,20 +235,20 @@ root = customtkinter.CTk()
 # Window setting
 root.title("A.R.E.T - Amazing Random Exam Tutor")
 root.minsize(1100, 700)  # Minimum size of the window
-root.maxsize(1100, 700)  # Maximum size of the window
+root.maxsize(1500, 700)  # Maximum size of the window
 root.resizable(FALSE, FALSE)
 root.geometry("500+200")  # Position of the window in the screen and size of the window 
 
 # Font
-helv = Font(family="Helvetica", size=16)
+helv = customtkinter.CTkFont(family="Helvetica", size=20)
 
 # Main frame settings
-main_frame = Frame(
-    root, bg="#3d1f82", highlightbackground="black", highlightthickness=1
+main_frame = customtkinter.CTkFrame(
+    root, border_color = "black", border_width = 1
 )
 main_frame.pack(side=RIGHT)
 main_frame.pack_propagate(False)
-main_frame.configure(width=1000, height=900)
+main_frame.configure(width=1200, height=900)
 
 
 # Setting the config file
@@ -338,25 +343,6 @@ def add_to_subject_btn_list(frame_):
         listed.pack()
 
 
-def set_widgets_subject(frame_):
-    widgets_list = []
-    widgets_in_frame = frame_.winfo_children()
-    for widgets in widgets_in_frame:
-        widgets_list.append(widgets)
-    
-    for widgets_in_list in widgets_list:
-        widgets_in_list.pack()
-
-
-def set_widgets_subject_btn(frame_):
-    widgets_list = []
-    widgets_in_frame = frame_.winfo_children()
-    for widgets in widgets_in_frame:
-        widgets_list.append(widgets)
-
-    # subject_btn_list.clear()
-
-
 ##Define the question & answers page
 def qa_page():
     qa_frame = Frame(
@@ -365,11 +351,10 @@ def qa_page():
     qa_frame.pack(side=RIGHT, expand=True, fill=BOTH)
     qa_frame.pack_propagate(FALSE)
 
-    add_to_subject_list(qa_frame)
-    
-    
-    
-    # set_widgets_subject(qa_frame)
+    scroll_qa_frame = customtkinter.CTkScrollableFrame(qa_frame)
+    scroll_qa_frame.pack(side=LEFT, expand=True, fill=BOTH)
+
+    add_to_subject_list(scroll_qa_frame)
 
 
 ##Define the subjects page
@@ -380,16 +365,16 @@ def subjects_page():
     subjects_frame.pack(side=RIGHT, expand=True, fill=BOTH)
     subjects_frame.pack_propagate(FALSE)
 
+    scroll_subject_frame = customtkinter.CTkScrollableFrame(subjects_frame)
+    scroll_subject_frame.pack(side=LEFT, expand=True, fill=BOTH)
 
-    add_to_subject_btn_list(subjects_frame)
+    add_to_subject_btn_list(scroll_subject_frame)
 
     # Btn to add new subjects
-    add_new_subjects_btn = Button(
-        subjects_frame, text="ADD NEW", command=lambda: save_new_subject()
+    add_new_subjects_btn = customtkinter.CTkButton(
+        scroll_subject_frame, text="ADD NEW", command=lambda: save_new_subject()
     )
     add_new_subjects_btn.pack()
-
-    set_widgets_subject_btn(subjects_frame)
 
 
 # Function to write a new subject into the configuration json file, fired after the button "ADD NEW" in the subject frame is pressed
@@ -397,6 +382,9 @@ def save_new_subject():
     filetype_ = [('pdf file', '*.pdf')]
     new_sub_name = askstring("Subject name", "Insert subject's name", parent=root)
     if new_sub_name is None:
+        return
+    elif len(new_sub_name) > 15:
+        messagebox.showerror("Error", "Name cannot have more than 10 chars")
         return
     else:
         new_sub_q_file = askopenfilename(title="Question File", initialdir='/', filetypes=filetype_)
