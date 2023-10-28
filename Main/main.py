@@ -5,15 +5,13 @@
 #       Background color design: darker violet like in those modern UI
 #       Widgets' style: Rounded corner buttons that seems integrated into the background
 #       Sidebar icons
+#       set variable to change for background and foreground color, fonts and other variable
 #       changing colors of the background (?)
+#
 #   Making the script an executive
-#   Put value with relative screen resolution
-#   If subjects folders are not found show error dialog to try and find those folders
-#   set variable to change for background and foreground color, fonts and other variable
-#   New subject generation method: Once the user has given a pdf, it will be separated in all of it's pages and automatically set to be used. >>
-#   >>(Add a default folder and when creating files make a folder to contain subfolders of question and answers)
+
 # FIX:
-#   Keep the index somewhere instead of resetting it when changing the page (Put an alert when exiting the qa page)
+
 
 
 import os
@@ -23,13 +21,16 @@ import json
 import shutil
 from tkinter import *
 from tkinter import messagebox
-from tkinter import ttk
 from tkinter.filedialog import askopenfilename
 from tkinter.font import Font
 from tkinter.simpledialog import askstring
 from PIL import *
 from pypdf import PdfWriter, PdfReader
 from pypdf.errors import PdfReadError
+
+##Lists where the objects for the frames are saved and used also to show object in their respective frames
+subject_btn_list = []
+subject_list = []
 
 
 ##Class Subject is used to create an object for every subjects is in the configuration json file, also it sets the button to ask question and show answers.
@@ -50,7 +51,6 @@ class Subject(Frame):
 
         ##Call the create index method to make the list of questions and answers
         self.create_index()
-
         ##Widgets creation
         self.sub_lbl = Label(self, text=name)
         self.index_lbl = Label(
@@ -99,7 +99,7 @@ class Subject(Frame):
                 "Fatal Error", "File in folders are not the same amount"
             )
             sys.exit()
-
+    
     ##Method that take the next index in the list
     def index_forward(self):
         if self.curr_index == (len(self.question_rand_list) - 1):
@@ -295,10 +295,6 @@ instructions_label = Label(
 starting_Label.pack()
 instructions_label.pack()
 
-##Lists where the objects for the frames are saved and used also to show object in their respective frames
-subject_btn_list = []
-subject_list = []
-
 
 # Function that show the current section
 def current_page(label):
@@ -312,23 +308,23 @@ def del_current():
         frame.pack_forget()
 
 
-# Function to add subject object to the subject list, used to render the subject into the frame
+# Function to add subject object to the subject list, used to rendering the subject into the frame
 def add_to_subject_list(frame_):
     with open("conf.json", "r") as subject_file:
         load_subject_file = json.load(subject_file)
         
     for sub in load_subject_file["Saved subjects"]:
-        subject_list.append(
-            Subject(
-                frame_,
-                sub["Subject_Name"],
-                sub["question_folder"],
-                sub["answer_folder"],
+            subject_list.append(
+                Subject(
+                    frame_,
+                    sub["Subject_Name"],
+                    sub["question_folder"],
+                    sub["answer_folder"],
+                )
             )
-        )
     for listed in subject_list:
         listed.pack()
-
+    
 
 def add_to_subject_btn_list(frame_):
     with open("conf.json", "r") as subject_btn_file:
