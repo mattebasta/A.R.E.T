@@ -1,12 +1,11 @@
 # TODO:
 #   GUI:
-#       use customtkinter 
+#       bigger buttons
+#       change font
 #       better UI style
-#       Background color design: darker violet like in those modern UI
-#       Widgets' style: Rounded corner buttons that seems integrated into the background
-#       Sidebar icons
-#       set variable to change for background and foreground color, fonts and other variable
-#       changing colors of the background (?)
+#       Sidebar and buttons icons
+#       In the more page set up a tutorial and warnings
+#       In the settings page add an option to change the theme (not just system, but colored default theme, halloween theme, christmas theme, easter theme)
 #
 #   Making the script an executive
 
@@ -22,16 +21,103 @@ import shutil
 from tkinter import *
 from tkinter import messagebox
 from tkinter.filedialog import askopenfilename
-from tkinter.font import Font
 from tkinter.simpledialog import askstring
 import customtkinter
 from PIL import *
 from pypdf import PdfWriter, PdfReader
 from pypdf.errors import PdfReadError
 
+def default_sub_dir():
+    if os.path.isdir('Subjects'):
+        print("folder Subjects already exists")
+    else:
+        default_subject_folder_name = "Subjects"
+        default_subject_folder_parent_dir = "./"
+        default_subject_folder__path = os.path.join(default_subject_folder_parent_dir, default_subject_folder_name)
+        os.mkdir(default_subject_folder__path)
+
+
+##Initialization of the tkinter window
+default_sub_dir()
+root = customtkinter.CTk()
+
+##Related to GUI
+
+# Window setting
+root.title("A.R.E.T - Amazing Random Exam Tutor")
+root.minsize(1100, 700)  # Minimum size of the window
+root.maxsize(1500, 700)  # Maximum size of the window
+root.resizable(FALSE, FALSE)
+root.geometry("500+200")  # Position of the window in the screen and size of the window 
+
+
+
+
+# Setting the config file
+config_File = "./conf.JSON"
+check_file = os.path.isfile(config_File)
+
+# Check if config file already exist
+if check_file == False:
+    print("no folder config found...\ncreating now....")
+    configFileAlert = messagebox.showinfo(
+        title="Warning",
+        message="No folder config file found \n the system will create it now")
+
+    # Preparing folder datas to write in the json file
+    dict = {
+    "Theme": [
+        {
+            "theme_name": "System",
+            "theme_fg" : "blue",
+            "theme_font" : "system",
+            "theme_font_size" : 20,
+            "theme_text_color": "white",
+            "theme_frame_color": "#00495c"
+        }
+    ],
+
+    "Saved subjects": [
+        
+    ]
+}
+
+    valueToWrite = json.dumps(dict, indent=4, separators=(",", ":"))
+    jsonConf = open("conf.json", "w")
+    jsonConf.write(valueToWrite)
+    jsonConf.close()
+
+    # open config file to read the values
+    with open("conf.json", "r") as conf_file:
+        load_file = json.load(conf_file)
+else:
+    # Config file already exist
+    print("config file already exists...\nreading folders from config....")
+    with open("conf.json", "r") as conf_file:
+        load_file = json.load(conf_file)
+
 ##Lists where the objects for the frames are saved and used also to show object in their respective frames
 subject_btn_list = []
 subject_list = []
+with open('conf.json', 'r') as f:
+    load_config = json.load(f)
+    
+    theme_dict = {
+        "theme_name" : load_config["Theme"][0]["theme_name"],
+        "theme_fg" : load_config["Theme"][0]["theme_fg"],
+        "theme_font" : load_config["Theme"][0]["theme_font"],
+        "theme_font_size" : load_config["Theme"][0]["theme_font_size"],
+        "theme_text_color" : load_config["Theme"][0]["theme_text_color"],
+        "theme_frame_color" : load_config["Theme"][0]["theme_frame_color"]
+        }
+
+# Main frame settings
+main_frame = customtkinter.CTkFrame(
+    root, border_color = "black", border_width = 1, fg_color=theme_dict["theme_frame_color"]
+)
+main_frame.pack(side=RIGHT)
+main_frame.pack_propagate(False)
+main_frame.configure(width=1200, height=900)
 
 
 ##Class Subject is used to create an object for every subjects is in the configuration json file, also it sets the button to ask question and show answers.
@@ -52,43 +138,41 @@ class Subject(Frame):
         ##Widgets creation
         self.subject_custom_frame = customtkinter.CTkFrame(
             master,
-            width=500,
-            height=600,
-            border_color="white",
-            border_width= 1
+            fg_color=theme_dict["theme_frame_color"]
         )
-        self.sub_lbl = customtkinter.CTkLabel(self.subject_custom_frame, text=name, font = helv)
+        self.sub_lbl = customtkinter.CTkLabel(self.subject_custom_frame, text=name, font = (theme_dict["theme_font"], theme_dict["theme_font_size"]), text_color = theme_dict["theme_text_color"])
         self.index_lbl = customtkinter.CTkLabel(
             self.subject_custom_frame,
             text="question "
             + str(self.curr_index + 1)
             + "/"
             + str(len(self.quest_list)),
-            font = helv
+            font = (theme_dict["theme_font"], theme_dict["theme_font_size"]),
+            text_color = theme_dict["theme_text_color"]
         )
         self.ask_question_btn = customtkinter.CTkButton(
-            self.subject_custom_frame, text="Question", command=lambda: self.ask_question(), font = helv
+            self.subject_custom_frame, text="Question", command=lambda: self.ask_question(), fg_color=theme_dict["theme_fg"], text_color = theme_dict["theme_text_color"],  font = (theme_dict["theme_font"], theme_dict["theme_font_size"])
         )
         self.show_answer_btn = customtkinter.CTkButton(
-            self.subject_custom_frame, text="Answer", command=lambda: self.show_answer(), font = helv
+            self.subject_custom_frame, text="Answer", command=lambda: self.show_answer(), fg_color=theme_dict["theme_fg"], text_color = theme_dict["theme_text_color"], font = (theme_dict["theme_font"], theme_dict["theme_font_size"])
         )
         self.index_forward_btn = customtkinter.CTkButton(
-            self.subject_custom_frame, text="Next", command=lambda: self.index_forward(), font = helv
+            self.subject_custom_frame, text="Next", command=lambda: self.index_forward(), fg_color=theme_dict["theme_fg"], text_color = theme_dict["theme_text_color"], font = (theme_dict["theme_font"], theme_dict["theme_font_size"])
         )
         self.index_backward_btn = customtkinter.CTkButton(
-            self.subject_custom_frame, text="Previous", command=lambda: self.index_backward(), font = helv
+            self.subject_custom_frame, text="Previous", command=lambda: self.index_backward(), fg_color=theme_dict["theme_fg"], text_color = theme_dict["theme_text_color"], font = (theme_dict["theme_font"], theme_dict["theme_font_size"])
         )
 
-        self.subject_custom_frame.pack(pady = 15, padx = 5, ipady = 10, ipadx = 15)
-        self.sub_lbl.pack(side=LEFT, padx=10, pady=10, fill=NONE, expand=FALSE)
-        self.index_lbl.pack(side=LEFT, padx=10, pady=10, fill=NONE, expand=FALSE)
-        self.ask_question_btn.pack(side=LEFT, padx=10, pady=10, fill=NONE, expand=FALSE)
-        self.show_answer_btn.pack(side=LEFT, padx=10, pady=10, fill=NONE, expand=FALSE)
+        self.subject_custom_frame.pack(pady = 15, padx = 5, expand=True, fill=X)
+        self.sub_lbl.pack(side=LEFT, padx=10, pady=10, expand=True)
+        self.index_lbl.pack(side=LEFT, padx=10, pady=10, expand=True)
+        self.ask_question_btn.pack(side=LEFT, padx=10, pady=10, expand=True)
+        self.show_answer_btn.pack(side=LEFT, padx=10, pady=10, expand=True)
         self.index_forward_btn.pack(
-            side=LEFT, padx=10, pady=10, fill=NONE, expand=FALSE
+            side=LEFT, padx=10, pady=10, expand=True
         )
         self.index_backward_btn.pack(
-            side=LEFT, padx=10, pady=10, fill=NONE, expand=FALSE
+            side=LEFT, padx=10, pady=10, expand=True
         )
 
     ##Method to create the list containing the questions and answers
@@ -161,14 +245,16 @@ class Subject_BTN(Frame):
             master,
             width=500,
             height=600,
-            border_color="white",
-            border_width= 2
+            fg_color=theme_dict["theme_frame_color"]
         )
-        self.lbl = customtkinter.CTkLabel(self.subject_btn_custom_frame, text=name)
+        self.lbl = customtkinter.CTkLabel(self.subject_btn_custom_frame, text=name, font=(theme_dict["theme_font"], theme_dict["theme_font_size"]), text_color = theme_dict["theme_text_color"])
         self.btn_del = customtkinter.CTkButton(
             self.subject_btn_custom_frame,
             text="DEL",
-            command=lambda: self.__delete_Subject__()
+            command=lambda: self.__delete_Subject__(),
+            fg_color=theme_dict["theme_fg"],
+            text_color = theme_dict["theme_text_color"],
+            font=(theme_dict["theme_font"], theme_dict["theme_font_size"])
         )
 
         self.subject_btn_custom_frame.pack(ipadx=15, ipady=10, padx=10, pady=10)
@@ -216,90 +302,21 @@ def file_configuration(file_q, file_a, sub_name, sub_q_dir, sub_a_dir):
         with open(output_a_path, "wb") as out_a_stream:
             out_a_files.write(out_a_stream)
 
-def default_sub_dir():
-    if os.path.isdir('Subjects'):
-        print("folder Subjects already exists")
-    else:
-        default_subject_folder_name = "Subjects"
-        default_subject_folder_parent_dir = "./"
-        default_subject_folder__path = os.path.join(default_subject_folder_parent_dir, default_subject_folder_name)
-        os.mkdir(default_subject_folder__path)
-
-
-##Initialization of the tkinter window
-default_sub_dir()
-root = customtkinter.CTk()
-
-##Related to GUI
-
-# Window setting
-root.title("A.R.E.T - Amazing Random Exam Tutor")
-root.minsize(1100, 700)  # Minimum size of the window
-root.maxsize(1500, 700)  # Maximum size of the window
-root.resizable(FALSE, FALSE)
-root.geometry("500+200")  # Position of the window in the screen and size of the window 
-
-# Font
-helv = customtkinter.CTkFont(family="Helvetica", size=20)
-
-# Main frame settings
-main_frame = customtkinter.CTkFrame(
-    root, border_color = "black", border_width = 1
-)
-main_frame.pack(side=RIGHT)
-main_frame.pack_propagate(False)
-main_frame.configure(width=1200, height=900)
-
-
-# Setting the config file
-config_File = "./conf.JSON"
-check_file = os.path.isfile(config_File)
-
-# Check if config file already exist
-if check_file == False:
-    print("no folder config found...\ncreating now....")
-    configFileAlert = messagebox.showinfo(
-        title="Warning",
-        message="No folder config file found \n the system will create it now")
-
-    # Preparing folder datas to write in the json file
-    dict = {
-        "Saved subjects": [
-
-        ]
-    }
-    
-    valueToWrite = json.dumps(dict, indent=4, separators=(",", ":"))
-    jsonConf = open("conf.json", "w")
-    jsonConf.write(valueToWrite)
-    jsonConf.close()
-
-    # open config file to read the values
-    with open("conf.json", "r") as conf_file:
-        load_file = json.load(conf_file)
-else:
-    # Config file already exist
-    print("config file already exists...\nreading folders from config....")
-    with open("conf.json", "r") as conf_file:
-        load_file = json.load(conf_file)
-
 ##Labels(main_frame)
-starting_Label = Label(
+starting_Label = customtkinter.CTkLabel(
     main_frame,
-    text="Welcome to ARET\n Amazing. Random. Exam. Tutor. \n your best friend when you need someone to ask you random exam questions",
-    bg="#3d1f82",
-    fg="white",
-    font=helv,
+    text="Welcome to ARET",
+    font = (theme_dict["theme_font"], theme_dict["theme_font_size"]),
+    text_color = theme_dict["theme_text_color"]
 )
-instructions_label = Label(
+instructions_label = customtkinter.CTkLabel(
     main_frame,
-    text="Before you start you need to set up the folders containing your question and answers\n the program should have already asked you that, but if you need to add more subjects\n you can do that by pressing the subjects button on the left sidebar",
-    bg="#3d1f82",
-    fg="white",
-    font=helv,
+    text="If you want to start using ARET, you will need to set up a subject into the subject page \n Or you can change your theme in the settings page \n If you still need help you can visit the more page",
+    font = (theme_dict["theme_font"], theme_dict["theme_font_size"]),
+    text_color = theme_dict["theme_text_color"]
 )
-starting_Label.pack()
-instructions_label.pack()
+starting_Label.pack(pady = 20)
+instructions_label.pack(pady = 20)
 
 
 # Function that show the current section
@@ -345,13 +362,14 @@ def add_to_subject_btn_list(frame_):
 
 ##Define the question & answers page
 def qa_page():
-    qa_frame = Frame(
-        main_frame, bg="#3d1f82", highlightbackground="black", highlightthickness=2
+    qa_frame = customtkinter.CTkFrame(
+        main_frame,
+        fg_color=theme_dict["theme_frame_color"]
     )
     qa_frame.pack(side=RIGHT, expand=True, fill=BOTH)
     qa_frame.pack_propagate(FALSE)
 
-    scroll_qa_frame = customtkinter.CTkScrollableFrame(qa_frame)
+    scroll_qa_frame = customtkinter.CTkScrollableFrame(qa_frame, fg_color=theme_dict["theme_frame_color"])
     scroll_qa_frame.pack(side=LEFT, expand=True, fill=BOTH)
 
     add_to_subject_list(scroll_qa_frame)
@@ -359,20 +377,21 @@ def qa_page():
 
 ##Define the subjects page
 def subjects_page():
-    subjects_frame = Frame(
-        main_frame, bg="#3d1f82", highlightbackground="black", highlightthickness=2
+    subjects_frame = customtkinter.CTkFrame(
+        main_frame,
+        fg_color=theme_dict["theme_frame_color"]
     )
     subjects_frame.pack(side=RIGHT, expand=True, fill=BOTH)
     subjects_frame.pack_propagate(FALSE)
 
-    scroll_subject_frame = customtkinter.CTkScrollableFrame(subjects_frame)
+    scroll_subject_frame = customtkinter.CTkScrollableFrame(subjects_frame, fg_color=theme_dict["theme_frame_color"])
     scroll_subject_frame.pack(side=LEFT, expand=True, fill=BOTH)
 
     add_to_subject_btn_list(scroll_subject_frame)
 
     # Btn to add new subjects
     add_new_subjects_btn = customtkinter.CTkButton(
-        scroll_subject_frame, text="ADD NEW", command=lambda: save_new_subject()
+        scroll_subject_frame, text="ADD NEW", fg_color=theme_dict["theme_fg"], text_color = theme_dict["theme_text_color"], font = (theme_dict["theme_font"], theme_dict["theme_font_size"]), command=lambda: save_new_subject()
     )
     add_new_subjects_btn.pack()
 
@@ -383,7 +402,7 @@ def save_new_subject():
     new_sub_name = askstring("Subject name", "Insert subject's name", parent=root)
     if new_sub_name is None:
         return
-    elif len(new_sub_name) > 15:
+    elif len(new_sub_name) > 10:
         messagebox.showerror("Error", "Name cannot have more than 10 chars")
         return
     else:
@@ -442,44 +461,98 @@ def save_new_subject():
 
     write_json(newdic)
 
+#TODO: complete case list FIX
+def setup_theme(theme_name):#[      name,             fg_color,                font,               font_size,    text_color,    frame_color]
+    halloween_theme_list =       ["Spooky",           "#e65900",          "Century Gothic",           20,         "#fffdee",       "#1d0d25"] 
+    system_theme_list =          ["System",           "blue",             "System",                   20,         "#fffdee",       "#00495c"]
+    noel_theme_list =            ["Noel",             "#BB010B",          "Lucida Handwriting",       20,         "#FAF8F8",     "#23856D"]
+    nightshade_theme_list =      ["Nightshade",       "#140152",          "Lucida Handwriting",       20,         "#fceff9",     "#04052E"]
+    luminescence_theme_list =    ["Luminescence",     "#e4e5f1",          "Lucida Handwriting",       20,         "#5575c2",     "#fafafa"]
+    with open('conf.json', 'r') as file_theme:
+        file_theme_data = json.load(file_theme)
+        if theme_name == "System":
+            file_theme_data["Theme"][0]["theme_name"] = system_theme_list[0]
+            file_theme_data["Theme"][0]["theme_fg"] = system_theme_list[1]
+            file_theme_data["Theme"][0]["theme_font"] = system_theme_list[2]
+            file_theme_data["Theme"][0]["theme_font_size"] = system_theme_list[3]
+            file_theme_data["Theme"][0]["theme_text_color"] = system_theme_list[4]
+            file_theme_data["Theme"][0]["theme_frame_color"] = system_theme_list[5]
+        elif theme_name == "Spooky":
+            file_theme_data["Theme"][0]["theme_name"] = halloween_theme_list[0]
+            file_theme_data["Theme"][0]["theme_fg"] = halloween_theme_list[1]
+            file_theme_data["Theme"][0]["theme_font"] = halloween_theme_list[2]
+            file_theme_data["Theme"][0]["theme_font_size"] = halloween_theme_list[3]
+            file_theme_data["Theme"][0]["theme_text_color"] = halloween_theme_list[4]
+            file_theme_data["Theme"][0]["theme_frame_color"] = halloween_theme_list[5]
+        elif theme_name == "Noel":
+            file_theme_data["Theme"][0]["theme_name"] = noel_theme_list[0]
+            file_theme_data["Theme"][0]["theme_fg"] = noel_theme_list[1]
+            file_theme_data["Theme"][0]["theme_font"] = noel_theme_list[2]
+            file_theme_data["Theme"][0]["theme_font_size"] = noel_theme_list[3]
+            file_theme_data["Theme"][0]["theme_text_color"] = noel_theme_list[4]
+            file_theme_data["Theme"][0]["theme_frame_color"] = noel_theme_list[5]
+        elif theme_name == "Nightshade":
+            file_theme_data["Theme"][0]["theme_name"] = nightshade_theme_list[0]
+            file_theme_data["Theme"][0]["theme_fg"] = nightshade_theme_list[1]
+            file_theme_data["Theme"][0]["theme_font"] = nightshade_theme_list[2]
+            file_theme_data["Theme"][0]["theme_font_size"] = nightshade_theme_list[3]
+            file_theme_data["Theme"][0]["theme_text_color"] = nightshade_theme_list[4]
+            file_theme_data["Theme"][0]["theme_frame_color"] = nightshade_theme_list[5]
+        elif theme_name == "Luminescence":
+            file_theme_data["Theme"][0]["theme_name"] = luminescence_theme_list[0]
+            file_theme_data["Theme"][0]["theme_fg"] = luminescence_theme_list[1]
+            file_theme_data["Theme"][0]["theme_font"] = luminescence_theme_list[2]
+            file_theme_data["Theme"][0]["theme_font_size"] = luminescence_theme_list[3]
+            file_theme_data["Theme"][0]["theme_text_color"] = luminescence_theme_list[4]
+            file_theme_data["Theme"][0]["theme_frame_color"] = luminescence_theme_list[5]
+        else:
+            print("no theme set")
+    with open('conf.json', 'w') as file_theme_to_write:
+        json.dump(file_theme_data, file_theme_to_write, indent=4)
 
 ##Define the settings page
+#TODO: add a preview of what the buttons and font will look like
 def settings_page():
-    settings_frame = Frame(
-        main_frame, bg="#3d1f82", highlightbackground="black", highlightthickness=1
+    settings_frame = customtkinter.CTkFrame(
+        main_frame,
+        fg_color=theme_dict["theme_frame_color"]
     )
     settings_frame.pack(side=RIGHT, expand=True, fill=BOTH)
     settings_frame.pack_propagate(FALSE)
     settings_frame.configure(height=900, width=800)
+    settings_frame.grid_columnconfigure(0, weight=1)
+    settings_frame.grid_columnconfigure(4, weight=1)
+    settings_frame.grid_rowconfigure(1, weight=1)
+    settings_frame.grid_rowconfigure(3, weight=1)
+
 
     ####Frame Widgets#####
-    main_settings_label = Label(
-        settings_frame,
-        text="Settings Page",
-        bg="#3d1f82",
-        fg="#ffffff",
-        font=("Times", 22),
-    )
+    settings_label = customtkinter.CTkLabel(settings_frame, text="Here you can configure the theme to use \n just choose it from the dropdown menu and hit the button Set", font=(theme_dict["theme_font"], theme_dict["theme_font_size"]), text_color = theme_dict["theme_text_color"])
+    combobox_label = customtkinter.CTkLabel(settings_frame, text="Choose a theme:", font=(theme_dict["theme_font"], theme_dict["theme_font_size"]), text_color = theme_dict["theme_text_color"])
+    theme_combobox = customtkinter.CTkComboBox(settings_frame, values=["System","Spooky","Noel","Nightshade","Luminescence"])
+    theme_btn = customtkinter.CTkButton(settings_frame, text="Set", command = lambda: setup_theme(theme_combobox.get()), fg_color=theme_dict["theme_fg"], text_color = theme_dict["theme_text_color"], font = (theme_dict["theme_font"], theme_dict["theme_font_size"]))
+    
     ####Position in the frame######
-    main_settings_label.pack()
+    settings_label.grid(row=0, column=1, columnspan =3, pady = 20)
+    combobox_label.grid(row=2, column=1, columnspan=1)
+    theme_combobox.grid(row=2,column=2, columnspan=1)
+    theme_btn.grid(row=2, column=3, columnspan=1)
 
 
 ##Define the more page
 def more_page():
-    more_frame = Frame(
-        main_frame, bg="#3d1f82", highlightbackground="black", highlightthickness=1
+    more_frame = customtkinter.CTkFrame(
+        main_frame, 
+        fg_color=theme_dict["theme_frame_color"]
     )
     more_frame.pack(side=RIGHT, expand=True, fill=BOTH)
     more_frame.pack_propagate(FALSE)
     more_frame.configure(height=900, width=800)
 
     ####Frame Widgets#####
-    main_more_label = Label(
+    main_more_label = customtkinter.CTkLabel(
         more_frame,
-        text="More Info Page",
-        bg="#3d1f82",
-        fg="#ffffff",
-        font=("Times", 22),
+        text="More Info Page", text_color = theme_dict["theme_text_color"], font = (theme_dict["theme_font"], theme_dict["theme_font_size"])
     )
     ####Position in the frame######
     main_more_label.pack()
@@ -488,10 +561,12 @@ def more_page():
 ##Advice: if you want to update a label....call the method place() or pack() in a new line, otherwise it will generate a NONE error................WTF?!!!!
 
 # Widgets and configuration of the sidebar
-sidebar = Frame(root, bg="#3d1f82", highlightbackground="black", highlightthickness=1)
-sidebar.pack(side=LEFT, fill=Y)
+sidebar = customtkinter.CTkFrame(root, border_width=1, border_color="black", fg_color = theme_dict["theme_fg"])
+sidebar.pack(side=LEFT, fill=Y, ipadx = 5)
 sidebar.pack_propagate(FALSE)
-sidebar.configure(width=130)
+
+sidebar.rowconfigure(0, weight=1)
+sidebar.rowconfigure(5, weight=1)
 
 # Sidebar Labels
 qa_Label = Label(root, text="", bg="#3d1f82")
@@ -499,50 +574,49 @@ subjects_folder_Label = Label(root, text="", bg="#3d1f82")
 settings_Label = Label(root, text="", bg="#3d1f82")
 more_Label = Label(root, text="", bg="#3d1f82")
 
+
+
 # Sidebar Buttons
-qa_btn = Button(
-    root,
+qa_btn = customtkinter.CTkButton(
+    sidebar,
     text="Q&A",
-    bg="#3d1f82",
-    bd=0,
-    fg="#ffffff",
+    text_color = theme_dict["theme_text_color"],
+    fg_color = theme_dict["theme_fg"],
+    font = (theme_dict["theme_font"], 20),
     command=lambda: [current_page(qa_Label), qa_page()],
+    # image=
 )
-subjects_folder_button = Button(
-    root,
+subjects_folder_button = customtkinter.CTkButton(
+    sidebar,
     text="SUBJECTS",
-    bg="#3d1f82",
-    bd=0,
-    fg="#ffffff",
+    text_color = theme_dict["theme_text_color"],
+    fg_color = theme_dict["theme_fg"],
+    font = (theme_dict["theme_font"], 20),
     command=lambda: [current_page(subjects_folder_Label), subjects_page()],
 )
-settings_btn = Button(
-    root,
+settings_btn = customtkinter.CTkButton(
+    sidebar,
     text="SETTINGS",
-    bg="#3d1f82",
-    bd=0,
-    fg="#ffffff",
+    text_color = theme_dict["theme_text_color"],
+    fg_color = theme_dict["theme_fg"],
+    font = (theme_dict["theme_font"], 20),
     command=lambda: [current_page(settings_Label), settings_page()],
 )
-more_btn = Button(
-    root,
+more_btn = customtkinter.CTkButton(
+    sidebar,
     text="MORE",
-    bg="#3d1f82",
-    bd=0,
-    fg="#ffffff",
+    text_color = theme_dict["theme_text_color"],
+    fg_color = theme_dict["theme_fg"],
+    font = (theme_dict["theme_font"], 20),
     command=lambda: [current_page(more_Label), more_page()],
 )
 
 
 # Sidebar Buttons Positioning
-qa_btn.lift()
-qa_btn.place(x=20, y=30)
-subjects_folder_button.lift()
-subjects_folder_button.place(x=20, y=220)
-settings_btn.lift()
-settings_btn.place(x=20, y=420)
-more_btn.lift()
-more_btn.place(x=20, y=620)
+qa_btn.grid(column=0, row=1, pady=20, padx = (10,0))
+subjects_folder_button.grid(column=0, row=2, pady=20, padx = (10,0))
+settings_btn.grid(column=0, row=3, pady=20, padx = (10,0))
+more_btn.grid(column=0, row=4, pady=20, padx = (10,0))
 
 
 # all the widgets and other setting must be written before mainloop()
