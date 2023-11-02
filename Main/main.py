@@ -1,13 +1,9 @@
 # TODO:
 #   GUI:
-#       bigger buttons
-#       change font
-#       better UI style
-#       Sidebar and buttons icons
 #       In the more page set up a tutorial and warnings
-#       In the settings page add an option to change the theme (not just system, but colored default theme, halloween theme, christmas theme, easter theme)
 #
 #   Making the script an executive
+#   Make the theme rendering instantenous
 
 # FIX:
 
@@ -18,6 +14,7 @@ import random
 import sys
 import json
 import shutil
+import pathlib
 from tkinter import *
 from tkinter import messagebox
 from tkinter.filedialog import askopenfilename
@@ -368,6 +365,7 @@ def qa_page():
     )
     qa_frame.pack(side=RIGHT, expand=True, fill=BOTH)
     qa_frame.pack_propagate(FALSE)
+    
 
     scroll_qa_frame = customtkinter.CTkScrollableFrame(qa_frame, fg_color=theme_dict["theme_frame_color"])
     scroll_qa_frame.pack(side=LEFT, expand=True, fill=BOTH)
@@ -393,7 +391,7 @@ def subjects_page():
     add_new_subjects_btn = customtkinter.CTkButton(
         scroll_subject_frame, text="ADD NEW", fg_color=theme_dict["theme_fg"], text_color = theme_dict["theme_text_color"], font = (theme_dict["theme_font"], theme_dict["theme_font_size"]), command=lambda: save_new_subject()
     )
-    add_new_subjects_btn.pack()
+    add_new_subjects_btn.pack(pady = 50)
 
 
 # Function to write a new subject into the configuration json file, fired after the button "ADD NEW" in the subject frame is pressed
@@ -461,13 +459,13 @@ def save_new_subject():
 
     write_json(newdic)
 
-#TODO: complete case list FIX
+
 def setup_theme(theme_name):#[      name,             fg_color,                font,               font_size,    text_color,    frame_color]
     halloween_theme_list =       ["Spooky",           "#e65900",          "Century Gothic",           20,         "#fffdee",       "#1d0d25"] 
-    system_theme_list =          ["System",           "blue",             "System",                   20,         "#fffdee",       "#00495c"]
-    noel_theme_list =            ["Noel",             "#BB010B",          "Lucida Handwriting",       20,         "#FAF8F8",     "#23856D"]
-    nightshade_theme_list =      ["Nightshade",       "#140152",          "Lucida Handwriting",       20,         "#fceff9",     "#04052E"]
-    luminescence_theme_list =    ["Luminescence",     "#e4e5f1",          "Lucida Handwriting",       20,         "#5575c2",     "#fafafa"]
+    system_theme_list =          ["System",           "#3689e6",             "System",                   20,         "#fffdee",       "#00495c"]
+    noel_theme_list =            ["Noel",             "#BB010B",          "Lucida Handwriting",       20,         "#FAF8F8",       "#23856D"]
+    nightshade_theme_list =      ["Nightshade",       "#140152",          "Rockwell",                 20,         "#fceff9",       "#04052E"]
+    cottoncandy_theme_list =     ["CottonCandy",      "#e4e5f1",          "Moonbeam",                 20,         "#5575c2",       "#fafafa"]
     with open('conf.json', 'r') as file_theme:
         file_theme_data = json.load(file_theme)
         if theme_name == "System":
@@ -498,20 +496,19 @@ def setup_theme(theme_name):#[      name,             fg_color,                f
             file_theme_data["Theme"][0]["theme_font_size"] = nightshade_theme_list[3]
             file_theme_data["Theme"][0]["theme_text_color"] = nightshade_theme_list[4]
             file_theme_data["Theme"][0]["theme_frame_color"] = nightshade_theme_list[5]
-        elif theme_name == "Luminescence":
-            file_theme_data["Theme"][0]["theme_name"] = luminescence_theme_list[0]
-            file_theme_data["Theme"][0]["theme_fg"] = luminescence_theme_list[1]
-            file_theme_data["Theme"][0]["theme_font"] = luminescence_theme_list[2]
-            file_theme_data["Theme"][0]["theme_font_size"] = luminescence_theme_list[3]
-            file_theme_data["Theme"][0]["theme_text_color"] = luminescence_theme_list[4]
-            file_theme_data["Theme"][0]["theme_frame_color"] = luminescence_theme_list[5]
+        elif theme_name == "CottonCandy":
+            file_theme_data["Theme"][0]["theme_name"] = cottoncandy_theme_list[0]
+            file_theme_data["Theme"][0]["theme_fg"] = cottoncandy_theme_list[1]
+            file_theme_data["Theme"][0]["theme_font"] = cottoncandy_theme_list[2]
+            file_theme_data["Theme"][0]["theme_font_size"] = cottoncandy_theme_list[3]
+            file_theme_data["Theme"][0]["theme_text_color"] = cottoncandy_theme_list[4]
+            file_theme_data["Theme"][0]["theme_frame_color"] = cottoncandy_theme_list[5]
         else:
             print("no theme set")
     with open('conf.json', 'w') as file_theme_to_write:
         json.dump(file_theme_data, file_theme_to_write, indent=4)
 
 ##Define the settings page
-#TODO: add a preview of what the buttons and font will look like
 def settings_page():
     settings_frame = customtkinter.CTkFrame(
         main_frame,
@@ -529,7 +526,7 @@ def settings_page():
     ####Frame Widgets#####
     settings_label = customtkinter.CTkLabel(settings_frame, text="Here you can configure the theme to use \n just choose it from the dropdown menu and hit the button Set", font=(theme_dict["theme_font"], theme_dict["theme_font_size"]), text_color = theme_dict["theme_text_color"])
     combobox_label = customtkinter.CTkLabel(settings_frame, text="Choose a theme:", font=(theme_dict["theme_font"], theme_dict["theme_font_size"]), text_color = theme_dict["theme_text_color"])
-    theme_combobox = customtkinter.CTkComboBox(settings_frame, values=["System","Spooky","Noel","Nightshade","Luminescence"])
+    theme_combobox = customtkinter.CTkComboBox(settings_frame, values=["System","Spooky","Noel","Nightshade","CottonCandy"])
     theme_btn = customtkinter.CTkButton(settings_frame, text="Set", command = lambda: setup_theme(theme_combobox.get()), fg_color=theme_dict["theme_fg"], text_color = theme_dict["theme_text_color"], font = (theme_dict["theme_font"], theme_dict["theme_font_size"]))
     
     ####Position in the frame######
@@ -576,6 +573,25 @@ more_Label = Label(root, text="", bg="#3d1f82")
 
 
 
+working_dir = pathlib.Path(__file__).parent.resolve()
+
+qa_icon_name = 'qa.png'
+qa_icon_path = os.path.join(working_dir, qa_icon_name)
+qa_icon_img = PhotoImage(file= qa_icon_path)
+
+subject_icon_name = 'folder.png'
+subject_icon_path = os.path.join(working_dir, subject_icon_name)
+subject_icon_img = PhotoImage(file = subject_icon_path)      
+
+settings_icon_name = 'setting.png'
+settings_icon_path = os.path.join(working_dir, settings_icon_name)
+settings_icon_img = PhotoImage(file = settings_icon_path)
+
+more_icon_name = 'more.png'
+more_icon_path = os.path.join(working_dir, more_icon_name)
+more_icon_img = PhotoImage(file = more_icon_path)
+
+
 # Sidebar Buttons
 qa_btn = customtkinter.CTkButton(
     sidebar,
@@ -583,31 +599,37 @@ qa_btn = customtkinter.CTkButton(
     text_color = theme_dict["theme_text_color"],
     fg_color = theme_dict["theme_fg"],
     font = (theme_dict["theme_font"], 20),
+    image = qa_icon_img,
     command=lambda: [current_page(qa_Label), qa_page()],
-    # image=
 )
+
 subjects_folder_button = customtkinter.CTkButton(
     sidebar,
     text="SUBJECTS",
     text_color = theme_dict["theme_text_color"],
     fg_color = theme_dict["theme_fg"],
     font = (theme_dict["theme_font"], 20),
+    image = subject_icon_img,
     command=lambda: [current_page(subjects_folder_Label), subjects_page()],
 )
+
 settings_btn = customtkinter.CTkButton(
     sidebar,
     text="SETTINGS",
     text_color = theme_dict["theme_text_color"],
     fg_color = theme_dict["theme_fg"],
     font = (theme_dict["theme_font"], 20),
+    image = settings_icon_img,
     command=lambda: [current_page(settings_Label), settings_page()],
 )
+
 more_btn = customtkinter.CTkButton(
     sidebar,
     text="MORE",
     text_color = theme_dict["theme_text_color"],
     fg_color = theme_dict["theme_fg"],
     font = (theme_dict["theme_font"], 20),
+    image = more_icon_img,
     command=lambda: [current_page(more_Label), more_page()],
 )
 
