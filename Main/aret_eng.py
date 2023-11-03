@@ -1,11 +1,12 @@
 # TODO:
 #   GUI:
-#       In the more page set up a tutorial and warnings
 #
 #   Making the script an executive
-#   Make the theme rendering instantenous
 
-# FIX:
+#   ROADMAP:
+#   Make the theme rendering instantenous (have to define some function to call to set and update the dict and all the widgets)
+
+#   FIX:
 
 
 
@@ -15,14 +16,19 @@ import sys
 import json
 import shutil
 import pathlib
+import warnings
 from tkinter import *
 from tkinter import messagebox
 from tkinter.filedialog import askopenfilename
 from tkinter.simpledialog import askstring
 import customtkinter
+import webbrowser
 from PIL import *
 from pypdf import PdfWriter, PdfReader
 from pypdf.errors import PdfReadError
+
+
+warnings.filterwarnings('ignore')
 
 def default_sub_dir():
     if os.path.isdir('Subjects'):
@@ -66,7 +72,7 @@ if check_file == False:
     "Theme": [
         {
             "theme_name": "System",
-            "theme_fg" : "blue",
+            "theme_fg" : "#3689e6",
             "theme_font" : "system",
             "theme_font_size" : 20,
             "theme_text_color": "white",
@@ -96,6 +102,8 @@ else:
 ##Lists where the objects for the frames are saved and used also to show object in their respective frames
 subject_btn_list = []
 subject_list = []
+
+
 with open('conf.json', 'r') as f:
     load_config = json.load(f)
     
@@ -462,7 +470,7 @@ def save_new_subject():
 
 def setup_theme(theme_name):#[      name,             fg_color,                font,               font_size,    text_color,    frame_color]
     halloween_theme_list =       ["Spooky",           "#e65900",          "Century Gothic",           20,         "#fffdee",       "#1d0d25"] 
-    system_theme_list =          ["System",           "#3689e6",             "System",                   20,         "#fffdee",       "#00495c"]
+    system_theme_list =          ["System",           "#3689e6",          "System",                   20,         "#fffdee",       "#00495c"]
     noel_theme_list =            ["Noel",             "#BB010B",          "Lucida Handwriting",       20,         "#FAF8F8",       "#23856D"]
     nightshade_theme_list =      ["Nightshade",       "#140152",          "Rockwell",                 20,         "#fceff9",       "#04052E"]
     cottoncandy_theme_list =     ["CottonCandy",      "#e4e5f1",          "Moonbeam",                 20,         "#5575c2",       "#fafafa"]
@@ -475,6 +483,7 @@ def setup_theme(theme_name):#[      name,             fg_color,                f
             file_theme_data["Theme"][0]["theme_font_size"] = system_theme_list[3]
             file_theme_data["Theme"][0]["theme_text_color"] = system_theme_list[4]
             file_theme_data["Theme"][0]["theme_frame_color"] = system_theme_list[5]
+            messagebox.showinfo(title = "Theme set", message = "In order to change theme you will have to restart the program \n NOTE: All the current indexes will be reset to 1!")
         elif theme_name == "Spooky":
             file_theme_data["Theme"][0]["theme_name"] = halloween_theme_list[0]
             file_theme_data["Theme"][0]["theme_fg"] = halloween_theme_list[1]
@@ -482,6 +491,7 @@ def setup_theme(theme_name):#[      name,             fg_color,                f
             file_theme_data["Theme"][0]["theme_font_size"] = halloween_theme_list[3]
             file_theme_data["Theme"][0]["theme_text_color"] = halloween_theme_list[4]
             file_theme_data["Theme"][0]["theme_frame_color"] = halloween_theme_list[5]
+            messagebox.showinfo(title = "Theme set", message = "In order to change theme you will have to restart the program \n NOTE: All the current indexes will be reset to 1!")
         elif theme_name == "Noel":
             file_theme_data["Theme"][0]["theme_name"] = noel_theme_list[0]
             file_theme_data["Theme"][0]["theme_fg"] = noel_theme_list[1]
@@ -489,6 +499,7 @@ def setup_theme(theme_name):#[      name,             fg_color,                f
             file_theme_data["Theme"][0]["theme_font_size"] = noel_theme_list[3]
             file_theme_data["Theme"][0]["theme_text_color"] = noel_theme_list[4]
             file_theme_data["Theme"][0]["theme_frame_color"] = noel_theme_list[5]
+            messagebox.showinfo(title = "Theme set", message = "In order to change theme you will have to restart the program \n NOTE: All the current indexes will be reset to 1!")
         elif theme_name == "Nightshade":
             file_theme_data["Theme"][0]["theme_name"] = nightshade_theme_list[0]
             file_theme_data["Theme"][0]["theme_fg"] = nightshade_theme_list[1]
@@ -496,6 +507,7 @@ def setup_theme(theme_name):#[      name,             fg_color,                f
             file_theme_data["Theme"][0]["theme_font_size"] = nightshade_theme_list[3]
             file_theme_data["Theme"][0]["theme_text_color"] = nightshade_theme_list[4]
             file_theme_data["Theme"][0]["theme_frame_color"] = nightshade_theme_list[5]
+            messagebox.showinfo(title = "Theme set", message = "In order to change theme you will have to restart the program \n NOTE: All the current indexes will be reset to 1!")
         elif theme_name == "CottonCandy":
             file_theme_data["Theme"][0]["theme_name"] = cottoncandy_theme_list[0]
             file_theme_data["Theme"][0]["theme_fg"] = cottoncandy_theme_list[1]
@@ -503,6 +515,7 @@ def setup_theme(theme_name):#[      name,             fg_color,                f
             file_theme_data["Theme"][0]["theme_font_size"] = cottoncandy_theme_list[3]
             file_theme_data["Theme"][0]["theme_text_color"] = cottoncandy_theme_list[4]
             file_theme_data["Theme"][0]["theme_frame_color"] = cottoncandy_theme_list[5]
+            messagebox.showinfo(title = "Theme set", message = "In order to change theme you will have to restart the program \n NOTE: All the current indexes will be reset to 1!")
         else:
             print("no theme set")
     with open('conf.json', 'w') as file_theme_to_write:
@@ -516,7 +529,6 @@ def settings_page():
     )
     settings_frame.pack(side=RIGHT, expand=True, fill=BOTH)
     settings_frame.pack_propagate(FALSE)
-    settings_frame.configure(height=900, width=800)
     settings_frame.grid_columnconfigure(0, weight=1)
     settings_frame.grid_columnconfigure(4, weight=1)
     settings_frame.grid_rowconfigure(1, weight=1)
@@ -536,6 +548,9 @@ def settings_page():
     theme_btn.grid(row=2, column=3, columnspan=1)
 
 
+def open_url(url_):
+    webbrowser.open_new(url_)
+
 ##Define the more page
 def more_page():
     more_frame = customtkinter.CTkFrame(
@@ -544,15 +559,47 @@ def more_page():
     )
     more_frame.pack(side=RIGHT, expand=True, fill=BOTH)
     more_frame.pack_propagate(FALSE)
-    more_frame.configure(height=900, width=800)
+    more_frame.grid_rowconfigure(12, weight = 1)
+    more_frame.grid_columnconfigure(0, weight = 1)
+    more_frame.grid_columnconfigure(3, weight = 1)
+    
 
     ####Frame Widgets#####
     main_more_label = customtkinter.CTkLabel(
         more_frame,
-        text="More Info Page", text_color = theme_dict["theme_text_color"], font = (theme_dict["theme_font"], theme_dict["theme_font_size"])
+        text="Here you can find a small description of the program, in case you missed the starting page \n",
+        text_color = theme_dict["theme_text_color"],
+        font = ("Times New Roman", theme_dict["theme_font_size"])
     )
+    more_label_2 = customtkinter.CTkLabel(more_frame, text = "1. Head to the 'Subjects' page \n",text_color = theme_dict["theme_text_color"],font = ("Times New Roman", theme_dict["theme_font_size"]))
+    more_label_3 = customtkinter.CTkLabel(more_frame, text = "2. Press the button 'Add New'\n",text_color = theme_dict["theme_text_color"],font = ("Times New Roman", theme_dict["theme_font_size"]))
+    more_label_4 = customtkinter.CTkLabel(more_frame, text = "3. Insert the subject's name or the acronym\n",text_color = theme_dict["theme_text_color"],font = ("Times New Roman", theme_dict["theme_font_size"]))
+    more_label_5 = customtkinter.CTkLabel(more_frame, text = "4. Choose the question and the answer file\n",text_color = theme_dict["theme_text_color"],font = ("Times New Roman", theme_dict["theme_font_size"]))
+    more_label_6 = customtkinter.CTkLabel(more_frame, text = "5. Now head to the 'Q&A' page and start your study session\n",text_color = theme_dict["theme_text_color"],font = ("Times New Roman", theme_dict["theme_font_size"]))
+    more_label_7 = customtkinter.CTkLabel(more_frame, text = "Finally, in the 'Subjects' page you can delete the subjects you don't need anymore\n",text_color = theme_dict["theme_text_color"],font = ("Times New Roman", theme_dict["theme_font_size"]))
+    more_label_8 = customtkinter.CTkLabel(more_frame, text = "You can find more info on the webpage:\n",text_color = theme_dict["theme_text_color"],font = ("Times New Roman", theme_dict["theme_font_size"]))
+    more_label_9 = customtkinter.CTkLabel(more_frame, text = "I personally thank you for downloading and using A.R.E.T \n Good luck in your study",text_color = theme_dict["theme_text_color"],font = ("Times New Roman", theme_dict["theme_font_size"]))
+    
+    
+    website_url = customtkinter.CTkButton(
+        more_frame,
+        text = "https://mattebasta.github.io/ARET-WebPage/",
+        fg_color = theme_dict["theme_fg"],
+        text_color = theme_dict["theme_text_color"],
+        font=('Times New Roman', 24),
+        command = lambda : open_url("https://mattebasta.github.io/ARET-WebPage/"))
+    
     ####Position in the frame######
-    main_more_label.pack()
+    main_more_label.grid(row = 1, column = 1, columnspan = 2, pady = (40, 0))
+    more_label_2.grid(row = 2, column = 1, columnspan = 2)
+    more_label_3.grid(row = 3, column = 1, columnspan = 2)
+    more_label_4.grid(row = 4, column = 1, columnspan = 2)
+    more_label_5.grid(row = 5, column = 1, columnspan = 2)
+    more_label_6.grid(row = 6, column = 1, columnspan = 2, pady = (0, 20))
+    more_label_7.grid(row = 7, column = 1, columnspan = 2)
+    more_label_8.grid(row = 8, column = 1, pady = (10,0))
+    website_url.grid(row = 8, column = 2, pady=(0,10)), 
+    more_label_9.grid(row = 9, column = 1, columnspan = 2)
 
 
 ##Advice: if you want to update a label....call the method place() or pack() in a new line, otherwise it will generate a NONE error................WTF?!!!!
@@ -575,19 +622,19 @@ more_Label = Label(root, text="", bg="#3d1f82")
 
 working_dir = pathlib.Path(__file__).parent.resolve()
 
-qa_icon_name = 'qa.png'
+qa_icon_name = 'Icon\\qa.png'
 qa_icon_path = os.path.join(working_dir, qa_icon_name)
 qa_icon_img = PhotoImage(file= qa_icon_path)
 
-subject_icon_name = 'folder.png'
+subject_icon_name = 'Icon\\folder.png'
 subject_icon_path = os.path.join(working_dir, subject_icon_name)
 subject_icon_img = PhotoImage(file = subject_icon_path)      
 
-settings_icon_name = 'setting.png'
+settings_icon_name = 'Icon\\setting.png'
 settings_icon_path = os.path.join(working_dir, settings_icon_name)
 settings_icon_img = PhotoImage(file = settings_icon_path)
 
-more_icon_name = 'more.png'
+more_icon_name = 'Icon\\more.png'
 more_icon_path = os.path.join(working_dir, more_icon_name)
 more_icon_img = PhotoImage(file = more_icon_path)
 
